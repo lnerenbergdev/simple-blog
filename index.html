@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Simple Blog</title>
+	<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+	<style> 
+		.posts-container{
+			width: 50%;
+			margin: auto;
+		}
+
+		.post{
+			text-align: center;
+			border: 1px solid black;
+			width: 100%;
+			height: auto;
+		}
+
+		.post-content{
+			width: 75%;
+		}
+
+		.comment-author{
+			text-align: left;
+		}
+
+		.comment-content{
+			text-align: right;
+		}
+
+		.table-comments{
+			margin:auto;
+			table-layout: fixed;
+			width:65%;
+			word-wrap: break-word;
+		}
+
+		.table-container{
+			width: 65%;
+		}
+
+	</style>
+</head>
+<body>
+	<div id="post-template" class="post" style="display:none">
+		Name: <input type="text" class="post-name">
+		<div class="row">
+			Content: 
+			<textarea class="post-content" id="exampleTextarea" rows="3"></textarea>
+			<input type="hidden" class="post-id">
+			<button class="edit-post">Edit</button>
+			
+			<div class="table-container">
+				<div class="header"><span>comments</span></div>
+				<div class="post-comments">
+				</div>
+			</div>
+	
+
+			<button class="comment-post">Comment</button><input type="text" class="post-comment">
+		</div>
+	</div>
+
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-lg-12">
+				<div class="posts-container">
+					<div id="posts"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	Name: <input type="text" id="new-post-name">
+	Content: <textarea id="new-post-content"></textarea>
+	<button id="submit-new-post"> Submit </button>
+	<script>
+
+		function handleEditClick(evt) {
+			var target = $(evt.target);
+			$.post('/api/post/edit', {
+				_id : target.siblings(".post-id").val(),
+				name: target.parent('.row').siblings(".post-name").val(),
+				content: target.siblings(".post-content").val()
+			}, function (response) {
+				target.siblings(".post-name").val(response.name);
+				target.siblings(".post-content").val(response.content);
+			});
+		}
+
+		function handleCommentClick(evt) {
+			var target = $(evt.target);
+			$.post('/api/post/comment', {
+				_id : target.siblings(".post-id").val(),
+				content: target.siblings(".post-comment").val()
+			}, function () {
+			
+			});
+		}
+
+		function createPostDiv(post) { 
+			var commentDivs = [];
+
+			for(var i = 0; i < post.comments.length; i++){
+				commentDivs.push("<tr><th>" + post.comments[i].author + "</th>");
+				commentDivs.push("<td>" + post.comments[i].content + "</td></tr>");
+			}
+
+			var newDiv = $('#post-template').clone();
+			newDiv.removeAttr("id");
+			newDiv.find(".post-id").val(post._id);
+			newDiv.find(".post-name").val(post.name);
+			newDiv.find(".post-content").val(post.content);
+			newDiv.find(".post-comments").empty();
+			newDiv.find(".post-comments").append("<table class='table table-striped table-comments'>" + commentDivs.join('') + "</table>");
+			newDiv.show();
+			return newDiv;
+		}
+
+		function loadAllPosts() {
+			$.get('/api/posts', (response) => {
+				for(var post of response) {
+					$('#posts').append(createPostDiv(post));
+				}
+				$('.edit-post').click(handleEditClick);
+				$('.comment-post').click(handleCommentClick);
+				$('.header').click(collapse);
+			});
+		}
+
+		loadAllPosts();
+
+		function sendNewPost() {
+			$.post('/api/post', {
+				name: $('#new-post-name').val(),
+				content: $('#new-post-content').val()
+			}, function(response) {
+				var div = createPostDiv(response);
+				$('#posts').append(div);
+				div.find('.edit-post').click(handleEditClick);
+			});
+		}
+
+		function collapse(){
+			console.log("test");
+			header = $(this);
+			content = header.next();
+
+			content.slideToggle(500, function(){
+				header.text(function(){
+					return content.is(":visible") ? "Collapse comments" : "Expand comments";
+				});
+			});
+		}
+
+		$('#submit-new-post').click(sendNewPost);
+
+	</script>
+</body>
+</html>
