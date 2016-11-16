@@ -98,7 +98,7 @@
 				_id : target.siblings(".post-id").val(),
 				content: target.siblings(".post-comment").val()
 			}, function () {
-			
+				loadAllPosts();
 			});
 		}
 
@@ -123,6 +123,7 @@
 
 		function loadAllPosts() {
 			$.get('/api/posts', (response) => {
+				$('#posts').empty();
 				for(var post of response) {
 					$('#posts').append(createPostDiv(post));
 				}

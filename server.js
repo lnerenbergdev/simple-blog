@@ -120,18 +120,18 @@ app.post('/api/post/comment', (req, res) => {
 		});
 	});
 
-	// var newComment = new Comment({
-	// 	author: 'username',
-	// 	content: req.body.content
-	// });
+	var newComment = new Comment({
+		author: 'username',
+		content: req.body.content
+	});
 
-	// newComment.save((err) => {
-	// 	if (err) {
-	// 		res.status(500);
-	// 		res.send({status: "error", message: "comment overload"});
-	// 		return;
-	// 	}
-	// });
+	newComment.save((err) => {
+		if (err) {
+			res.status(500);
+			res.send({status: "error", message: "comment overload"});
+			return;
+		}
+	});
 });
 
 // Express Stack: Error Handling 
